@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Furniture-inspired warm palette */
+    --background: 30 15% 98%;
+    --foreground: 30 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 30 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 25% 15%;
+
+    /* Warm wood brown as primary */
+    --primary: 25 45% 35%;
+    --primary-foreground: 30 15% 98%;
+
+    /* Soft neutral secondary */
+    --secondary: 30 8% 92%;
+    --secondary-foreground: 30 25% 25%;
+
+    --muted: 30 8% 92%;
+    --muted-foreground: 30 15% 45%;
+
+    /* Soft blue accent for actions */
+    --accent: 200 35% 85%;
+    --accent-foreground: 200 45% 25%;
+
+    /* Warm red for destructive actions */
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Success green for received items */
+    --success: 120 40% 45%;
+    --success-foreground: 0 0% 98%;
+
+    /* Warning orange for ordered items */
+    --warning: 35 85% 55%;
+    --warning-foreground: 0 0% 98%;
+
+    --border: 30 12% 88%;
+    --input: 30 12% 88%;
+    --ring: 25 45% 35%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 30 15% 8%;
+    --foreground: 30 15% 92%;
+
+    --card: 30 15% 12%;
+    --card-foreground: 30 15% 92%;
+
+    --popover: 30 15% 12%;
+    --popover-foreground: 30 15% 92%;
+
+    --primary: 25 35% 65%;
+    --primary-foreground: 30 15% 8%;
+
+    --secondary: 30 8% 18%;
+    --secondary-foreground: 30 15% 85%;
+
+    --muted: 30 8% 18%;
+    --muted-foreground: 30 8% 55%;
+
+    --accent: 200 25% 25%;
+    --accent-foreground: 200 35% 85%;
+
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 120 35% 35%;
+    --success-foreground: 0 0% 98%;
+
+    --warning: 35 75% 45%;
+    --warning-foreground: 0 0% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer utilities {
+  /* Swipe animations */
+  .swipe-right {
+    transform: translateX(100px);
+    transition: transform 0.3s ease-out;
+  }
+  
+  .swipe-left {
+    transform: translateX(-100px);
+    transition: transform 0.3s ease-out;
+  }
+  
+  .swipe-reset {
+    transform: translateX(0);
+    transition: transform 0.3s ease-out;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-warm {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 100%);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--primary)) 100%);
+  }
+
+  /* Touch-friendly mobile styles */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
