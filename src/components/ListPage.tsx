@@ -8,6 +8,8 @@ import { EditDisplayNameDialog } from "./EditDisplayNameDialog";
 import { PriceChartDialog } from "./PriceChartDialog";
 import { Plus, Edit3, ArrowLeft, Euro } from "lucide-react";
 import { FurnitureItem, ItemStatus, AppData, List, APP_STORAGE_KEY, generateUUID } from "../types/furniture";
+import { RecordItem } from './RecordItem';
+import { syncAfterLocalUpdate } from '../utils/sync';
 
 interface ListPageProps {
   listId: string; // This is now the handle
@@ -45,7 +47,8 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
         setItems(currentList.items);
         setDisplayName(currentList.displayName);
       } else {
-        // Initialize new list with UUID
+        // Initialize new list with UUID but don't save yet
+        // The sync operation will handle saving to both localStorage and DB
         const newList: List = {
           id: generateUUID(),
           handle: listId,
@@ -54,22 +57,26 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
           createdAt: new Date(),
           updatedAt: new Date()
         };
-        appData.lists[listId] = newList;
-        console.log('Created new list. Full data:', appData);
-        localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(appData));
+        setItems([]);
+        setDisplayName(listId);
+        
+        // Trigger sync which will properly create the list in both places
+        syncAfterLocalUpdate(listId).catch(error => {
+          console.error('Error syncing with database:', error);
+        });
       }
     } catch (error) {
       console.error('Error in load effect:', error);
     }
   }, [listId]);
 
-  // Save items to localStorage whenever items or displayName changes
+  // Save items to localStorage and sync with database whenever items or displayName changes
   useEffect(() => {
     try {
       const savedData = localStorage.getItem(APP_STORAGE_KEY);
       let appData: AppData = savedData ? JSON.parse(savedData) : { lists: {} };
       
-      // Preserve the existing list data
+      // Update the list in local storage
       const existingList = appData.lists[listId];
       appData.lists[listId] = {
         id: existingList?.id || generateUUID(),
@@ -89,6 +96,11 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
       // Verify the save
       const verifyData = localStorage.getItem(APP_STORAGE_KEY);
       console.log('Verified saved data:', verifyData);
+
+      // Sync with database
+      syncAfterLocalUpdate(listId).catch(error => {
+        console.error('Error syncing with database:', error);
+      });
     } catch (error) {
       console.error('Error in save effect:', error);
     }

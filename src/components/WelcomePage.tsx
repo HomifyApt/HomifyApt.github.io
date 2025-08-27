@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, Plus, Users, History, Clock } from "lucide-react";
+import { syncAllLists } from '../utils/sync';
 
 interface WelcomePageProps {
   onStartList: () => void;
@@ -55,6 +56,11 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
                 } 
               : item)
           : []);
+
+        // Sync all lists with database
+        syncAllLists().catch(error => {
+          console.error('Error syncing lists with database:', error);
+        });
       } catch {
         setStoredLists([]);
       }
