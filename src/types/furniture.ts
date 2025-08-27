@@ -25,7 +25,7 @@ export interface AppData {
   lists: { [key: string]: List };
 }
 
-export const APP_STORAGE_KEY = 'homifyapt-local';
+export const APP_STORAGE_KEY = import.meta.env.VITE_APP_KEY;
 
 // Utility function to generate UUID
 export function generateUUID(): string {
