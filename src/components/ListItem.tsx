@@ -25,6 +25,7 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
   const currentX = useRef(0);
   const isDragging = useRef(false);
   const longPressTimer = useRef<NodeJS.Timeout>();
+  const isMouseDown = useRef(false);
 
   const getWebsiteDomain = (url: string) => {
     try {
@@ -35,9 +36,9 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX;
-    currentX.current = e.touches[0].clientX;
+  const handleDragStart = (clientX: number) => {
+    startX.current = clientX;
+    currentX.current = clientX;
     isDragging.current = false;
     
     // Long press for edit
@@ -48,10 +49,10 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
     }, 500);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleDragMove = (clientX: number) => {
     if (!cardRef.current) return;
     
-    currentX.current = e.touches[0].clientX;
+    currentX.current = clientX;
     const deltaX = currentX.current - startX.current;
     
     if (Math.abs(deltaX) > 10) {
@@ -76,7 +77,7 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleDragEnd = () => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
     }
@@ -104,7 +105,58 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
     }
     
     isDragging.current = false;
+    isMouseDown.current = false;
   };
+
+  // Touch event handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    handleDragStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    handleDragMove(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    handleDragEnd();
+  };
+
+  // Mouse event handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isMouseDown.current = true;
+    handleDragStart(e.clientX);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown.current) return;
+    handleDragMove(e.clientX);
+  };
+
+  const handleMouseUp = () => {
+    if (!isMouseDown.current) return;
+    handleDragEnd();
+  };
+
+  // Handle mouse leaving the element
+  const handleMouseLeave = () => {
+    if (isMouseDown.current) {
+      handleDragEnd();
+    }
+  };
+
+  useEffect(() => {
+    // Add global mouse up handler to handle cases where mouse is released outside the element
+    const handleGlobalMouseUp = () => {
+      if (isMouseDown.current) {
+        handleDragEnd();
+      }
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, []);
 
   const handleConfirmAction = () => {
     if (confirmAction === 'delete') {
@@ -135,6 +187,10 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">

@@ -1,23 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Plus, Users } from "lucide-react";
+import { Home, Plus, Users, History } from "lucide-react";
 
 interface WelcomePageProps {
   onStartList: () => void;
   onJoinList: (code: string) => void;
 }
 
+const STORAGE_KEY = "homifyapt-list-history";
+
 export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
   const [joinCode, setJoinCode] = useState("");
   const [isJoining, setIsJoining] = useState(false);
+  const [storedLists, setStoredLists] = useState<string[]>([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const lists = JSON.parse(stored);
+        setStoredLists(Array.isArray(lists) ? lists : []);
+      } catch {
+        setStoredLists([]);
+      }
+    }
+  }, []);
 
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (joinCode.trim()) {
-      onJoinList(joinCode.trim().toLowerCase());
+      const code = joinCode.trim().toLowerCase();
+      // Store the code in localStorage
+      const updatedLists = [code, ...storedLists.filter(list => list !== code)].slice(0, 5);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedLists));
+      onJoinList(code);
     }
+  };
+
+  const handleStoredListClick = (code: string) => {
+    onJoinList(code);
   };
 
   return (
@@ -28,7 +51,7 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
           <div className="w-16 h-16 mx-auto bg-primary rounded-2xl flex items-center justify-center mb-4">
             <Home className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">FurniList</h1>
+          <h1 className="text-3xl font-bold text-foreground">HomifyApt</h1>
           <p className="text-muted-foreground">Track furniture with your family & friends</p>
         </div>
 
@@ -73,6 +96,30 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
                 </Button>
               </CardContent>
             </Card>
+
+            {storedLists.length > 0 && (
+              <Card className="border-2 hover:border-muted/20 transition-colors">
+                <CardHeader className="text-center pb-3">
+                  <div className="w-12 h-12 mx-auto bg-muted/20 rounded-xl flex items-center justify-center mb-2">
+                    <History className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <CardTitle className="text-xl">Recent Lists</CardTitle>
+                  <CardDescription>Quick access to your recent lists</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {storedLists.map((list) => (
+                    <Button
+                      key={list}
+                      variant="ghost"
+                      className="w-full justify-start text-left font-mono"
+                      onClick={() => handleStoredListClick(list)}
+                    >
+                      {list}
+                    </Button>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
           </div>
         ) : (
           /* Join List Form */
@@ -111,6 +158,27 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
                   </Button>
                 </div>
               </form>
+
+              {storedLists.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <History className="w-4 h-4" />
+                    <span>Recent Lists</span>
+                  </div>
+                  <div className="space-y-2">
+                    {storedLists.map((list) => (
+                      <Button
+                        key={list}
+                        variant="ghost"
+                        className="w-full justify-start text-left font-mono"
+                        onClick={() => handleStoredListClick(list)}
+                      >
+                        {list}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

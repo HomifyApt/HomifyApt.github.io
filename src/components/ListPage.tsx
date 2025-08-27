@@ -6,7 +6,7 @@ import { ListItem } from "./ListItem";
 import { AddItemDialog } from "./AddItemDialog";
 import { EditHeaderDialog } from "./EditHeaderDialog";
 import { Plus, Edit3, ArrowLeft } from "lucide-react";
-import { FurnitureItem, ItemStatus } from "../types/furniture";
+import { FurnitureItem, ItemStatus, AppData, List, APP_STORAGE_KEY } from "../types/furniture";
 
 interface ListPageProps {
   listId: string;
@@ -21,26 +21,65 @@ export function ListPage({ listId, onBack }: ListPageProps) {
 
   // Load items from localStorage on mount
   useEffect(() => {
-    const savedItems = localStorage.getItem(`furnilist-${listId}`);
-    const savedHeader = localStorage.getItem(`furnilist-header-${listId}`);
-    
-    if (savedItems) {
-      setItems(JSON.parse(savedItems));
-    }
-    if (savedHeader) {
-      setDisplayHeader(savedHeader);
+    try {
+      console.log('Storage key being used:', APP_STORAGE_KEY);
+      const savedData = localStorage.getItem(APP_STORAGE_KEY);
+      console.log('Loading data:', savedData);
+      
+      let appData: AppData;
+      if (savedData) {
+        appData = JSON.parse(savedData);
+        console.log('Successfully parsed existing data:', appData);
+      } else {
+        appData = { lists: {} };
+        console.log('Initializing new app data');
+      }
+      
+      const currentList = appData.lists[listId];
+      if (currentList) {
+        console.log('Found existing list:', currentList);
+        setItems(currentList.items);
+        setDisplayHeader(currentList.header);
+      } else {
+        // Initialize new list
+        appData.lists[listId] = {
+          id: listId,
+          header: listId,
+          items: []
+        };
+        console.log('Created new list. Full data:', appData);
+        localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(appData));
+      }
+    } catch (error) {
+      console.error('Error in load effect:', error);
     }
   }, [listId]);
 
-  // Save items to localStorage whenever items change
+  // Save items to localStorage whenever items or header changes
   useEffect(() => {
-    localStorage.setItem(`furnilist-${listId}`, JSON.stringify(items));
-  }, [items, listId]);
-
-  // Save header to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem(`furnilist-header-${listId}`, displayHeader);
-  }, [displayHeader, listId]);
+    try {
+      const savedData = localStorage.getItem(APP_STORAGE_KEY);
+      let appData: AppData = savedData ? JSON.parse(savedData) : { lists: {} };
+      
+      appData.lists[listId] = {
+        id: listId,
+        header: displayHeader,
+        items: items
+      };
+      
+      console.log('About to save data:', {
+        key: APP_STORAGE_KEY,
+        data: appData
+      });
+      localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(appData));
+      
+      // Verify the save
+      const verifyData = localStorage.getItem(APP_STORAGE_KEY);
+      console.log('Verified saved data:', verifyData);
+    } catch (error) {
+      console.error('Error in save effect:', error);
+    }
+  }, [items, displayHeader, listId]);
 
   const handleAddItem = (newItem: Omit<FurnitureItem, 'id' | 'status'>) => {
     const item: FurnitureItem = {

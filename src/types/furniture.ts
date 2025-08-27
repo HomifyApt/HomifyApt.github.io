@@ -7,3 +7,15 @@ export interface FurnitureItem {
   price?: number;
   status: ItemStatus;
 }
+
+export interface List {
+  id: string;
+  header: string;
+  items: FurnitureItem[];
+}
+
+export interface AppData {
+  lists: { [key: string]: List };
+}
+
+export const APP_STORAGE_KEY = 'homifyapt-local';
