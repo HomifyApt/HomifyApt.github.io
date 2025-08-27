@@ -34,6 +34,7 @@ export function EditItemDialog({ open, onOpenChange, item, onUpdateItem }: EditI
       title: title.trim(),
       url: url.trim() || undefined,
       price: price.trim() ? parseFloat(price.trim()) : undefined,
+      updatedAt: new Date()
     });
 
     onOpenChange(false);

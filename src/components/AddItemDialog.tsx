@@ -25,6 +25,8 @@ export function AddItemDialog({ open, onOpenChange, onAddItem }: AddItemDialogPr
       title: title.trim(),
       url: url.trim() || undefined,
       price: price.trim() ? parseFloat(price.trim()) : undefined,
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
 
     // Reset form

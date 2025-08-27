@@ -50,7 +50,9 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
           id: generateUUID(),
           handle: listId,
           displayName: listId,
-          items: []
+          items: [],
+          createdAt: new Date(),
+          updatedAt: new Date()
         };
         appData.lists[listId] = newList;
         console.log('Created new list. Full data:', appData);
@@ -73,7 +75,9 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
         id: existingList?.id || generateUUID(),
         handle: listId,
         displayName: displayName,
-        items: items
+        items: items,
+        createdAt: existingList?.createdAt || new Date(),
+        updatedAt: new Date()
       };
       
       console.log('About to save data:', {
@@ -95,6 +99,8 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
       ...newItem,
       id: generateUUID(),
       status: 'pending' as ItemStatus,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     setItems(prev => [item, ...prev]);
   };
@@ -102,7 +108,7 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
   const handleUpdateItem = (itemId: string, updates: Partial<FurnitureItem>) => {
     setItems(prev => 
       prev.map(item => 
-        item.id === itemId ? { ...item, ...updates } : item
+        item.id === itemId ? { ...item, ...updates, updatedAt: new Date() } : item
       )
     );
   };
