@@ -93,7 +93,7 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
   const handleAddItem = (newItem: Omit<FurnitureItem, 'id' | 'status'>) => {
     const item: FurnitureItem = {
       ...newItem,
-      id: Date.now().toString(),
+      id: generateUUID(),
       status: 'pending' as ItemStatus,
     };
     setItems(prev => [item, ...prev]);
