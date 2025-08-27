@@ -4,23 +4,23 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListItem } from "./ListItem";
 import { AddItemDialog } from "./AddItemDialog";
-import { EditHeaderDialog } from "./EditHeaderDialog";
+import { EditDisplayNameDialog } from "./EditDisplayNameDialog";
 import { PriceChartDialog } from "./PriceChartDialog";
 import { Plus, Edit3, ArrowLeft, Euro } from "lucide-react";
-import { FurnitureItem, ItemStatus, AppData, List, APP_STORAGE_KEY } from "../types/furniture";
+import { FurnitureItem, ItemStatus, AppData, List, APP_STORAGE_KEY, generateUUID } from "../types/furniture";
 
 interface ListPageProps {
-  listId: string;
+  listId: string; // This is now the handle
   onBack: () => void;
-  onHeaderUpdate: (newHeader: string) => void;
+  onHeaderUpdate: (newDisplayName: string) => void;
   onContentUpdate: () => void;
 }
 
 export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: ListPageProps) {
-  const [displayHeader, setDisplayHeader] = useState(listId);
+  const [displayName, setDisplayName] = useState(listId);
   const [items, setItems] = useState<FurnitureItem[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditHeaderOpen, setIsEditHeaderOpen] = useState(false);
+  const [isEditDisplayNameOpen, setIsEditDisplayNameOpen] = useState(false);
   const [isPriceChartOpen, setIsPriceChartOpen] = useState(false);
 
   // Load items from localStorage on mount
@@ -43,14 +43,16 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
       if (currentList) {
         console.log('Found existing list:', currentList);
         setItems(currentList.items);
-        setDisplayHeader(currentList.header);
+        setDisplayName(currentList.displayName);
       } else {
-        // Initialize new list
-        appData.lists[listId] = {
-          id: listId,
-          header: listId,
+        // Initialize new list with UUID
+        const newList: List = {
+          id: generateUUID(),
+          handle: listId,
+          displayName: listId,
           items: []
         };
+        appData.lists[listId] = newList;
         console.log('Created new list. Full data:', appData);
         localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(appData));
       }
@@ -59,15 +61,18 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
     }
   }, [listId]);
 
-  // Save items to localStorage whenever items or header changes
+  // Save items to localStorage whenever items or displayName changes
   useEffect(() => {
     try {
       const savedData = localStorage.getItem(APP_STORAGE_KEY);
       let appData: AppData = savedData ? JSON.parse(savedData) : { lists: {} };
       
+      // Preserve the existing list data
+      const existingList = appData.lists[listId];
       appData.lists[listId] = {
-        id: listId,
-        header: displayHeader,
+        id: existingList?.id || generateUUID(),
+        handle: listId,
+        displayName: displayName,
         items: items
       };
       
@@ -83,7 +88,7 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
     } catch (error) {
       console.error('Error in save effect:', error);
     }
-  }, [items, displayHeader, listId]);
+  }, [items, displayName, listId]);
 
   const handleAddItem = (newItem: Omit<FurnitureItem, 'id' | 'status'>) => {
     const item: FurnitureItem = {
@@ -132,21 +137,21 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
   };
 
   // Update the handleHeaderUpdate function to trigger onHeaderUpdate
-  const handleHeaderUpdate = (newHeader: string) => {
+  const handleDisplayNameUpdate = (newDisplayName: string) => {
     try {
       const savedData = localStorage.getItem(APP_STORAGE_KEY);
       let appData: AppData = savedData ? JSON.parse(savedData) : { lists: {} };
       
       appData.lists[listId] = {
         ...appData.lists[listId],
-        header: newHeader
+        displayName: newDisplayName
       };
       
       localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(appData));
-      setDisplayHeader(newHeader);
-      onHeaderUpdate(newHeader);
+      setDisplayName(newDisplayName);
+      onHeaderUpdate(newDisplayName);
     } catch (error) {
-      console.error('Error updating header:', error);
+      console.error('Error updating display name:', error);
     }
   };
 
@@ -165,11 +170,11 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
           </Button>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold">{displayHeader}</h1>
+              <h1 className="text-xl font-semibold">{displayName}</h1>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsEditHeaderOpen(true)}
+                onClick={() => setIsEditDisplayNameOpen(true)}
                 className="text-primary-foreground hover:bg-primary-foreground/20 p-1"
               >
                 <Edit3 className="w-4 h-4" />
@@ -276,11 +281,11 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
         onAddItem={handleAddItem}
       />
 
-      <EditHeaderDialog
-        open={isEditHeaderOpen}
-        onOpenChange={setIsEditHeaderOpen}
-        currentHeader={displayHeader}
-        onUpdateHeader={handleHeaderUpdate}
+      <EditDisplayNameDialog
+        open={isEditDisplayNameOpen}
+        onOpenChange={setIsEditDisplayNameOpen}
+        currentDisplayName={displayName}
+        onUpdateDisplayName={handleDisplayNameUpdate}
       />
 
       <PriceChartDialog

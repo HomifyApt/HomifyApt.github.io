@@ -4,28 +4,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface EditHeaderDialogProps {
+interface EditDisplayNameDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentHeader: string;
-  onUpdateHeader: (newHeader: string) => void;
+  currentDisplayName: string;
+  onUpdateDisplayName: (newDisplayName: string) => void;
 }
 
-export function EditHeaderDialog({ open, onOpenChange, currentHeader, onUpdateHeader }: EditHeaderDialogProps) {
-  const [header, setHeader] = useState("");
+export function EditDisplayNameDialog({ 
+  open, 
+  onOpenChange, 
+  currentDisplayName, 
+  onUpdateDisplayName 
+}: EditDisplayNameDialogProps) {
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
     if (open) {
-      setHeader(currentHeader);
+      setDisplayName(currentDisplayName);
     }
-  }, [open, currentHeader]);
+  }, [open, currentDisplayName]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!header.trim()) return;
+    if (!displayName.trim()) return;
 
-    onUpdateHeader(header.trim());
+    onUpdateDisplayName(displayName.trim());
     onOpenChange(false);
   };
 
@@ -38,12 +43,12 @@ export function EditHeaderDialog({ open, onOpenChange, currentHeader, onUpdateHe
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="header">Display Name</Label>
+            <Label htmlFor="displayName">Display Name</Label>
             <Input
-              id="header"
+              id="displayName"
               placeholder="e.g., Living Room Furniture"
-              value={header}
-              onChange={(e) => setHeader(e.target.value)}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
               autoFocus
               required
             />
@@ -63,7 +68,7 @@ export function EditHeaderDialog({ open, onOpenChange, currentHeader, onUpdateHe
             </Button>
             <Button
               type="submit"
-              disabled={!header.trim()}
+              disabled={!displayName.trim()}
               className="flex-1 gradient-warm"
             >
               Save

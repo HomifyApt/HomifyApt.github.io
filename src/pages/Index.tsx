@@ -8,7 +8,8 @@ const STORAGE_KEY = "homifyapt-list-history";
 
 interface ListHistoryItem {
   id: string;
-  header: string;
+  handle: string;
+  displayName: string;
   lastAccessed: number; // timestamp
   lastUpdated: number; // timestamp for content updates
 }
@@ -18,20 +19,26 @@ const Index = () => {
   const [listId, setListId] = useState<string>('');
 
   // Function to update history with new access time
-  const updateListHistory = (id: string, header: string, isContentUpdate = false) => {
+  const updateListHistory = (handle: string, displayName: string, isContentUpdate = false) => {
     const stored = localStorage.getItem(STORAGE_KEY);
     const storedLists: ListHistoryItem[] = stored ? JSON.parse(stored) : [];
     const now = Date.now();
     
     // Remove existing entry if present
-    const filteredLists = storedLists.filter(list => list.id !== id);
+    const filteredLists = storedLists.filter(list => list.handle !== handle);
+    
+    // Get the list data from app data to ensure we have the correct UUID
+    const appDataStr = localStorage.getItem(APP_STORAGE_KEY);
+    const appData: AppData = appDataStr ? JSON.parse(appDataStr) : { lists: {} };
+    const listData = appData.lists[handle];
     
     // Create new entry
     const updatedList: ListHistoryItem = {
-      id,
-      header,
+      id: listData?.id || handle, // Use UUID if available, fallback to handle for backwards compatibility
+      handle,
+      displayName: displayName || handle,
       lastAccessed: now,
-      lastUpdated: isContentUpdate ? now : (storedLists.find(l => l.id === id)?.lastUpdated || now)
+      lastUpdated: isContentUpdate ? now : (storedLists.find(l => l.handle === handle)?.lastUpdated || now)
     };
     
     // Add to front of list and limit to 5 items
@@ -39,16 +46,16 @@ const Index = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedLists));
   };
 
-  // Function to update list header in history
-  const updateListHeaderInHistory = (id: string, newHeader: string) => {
+  // Function to update list displayName in history
+  const updateListDisplayNameInHistory = (handle: string, newDisplayName: string) => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return;
 
     const storedLists: ListHistoryItem[] = JSON.parse(stored);
-    const listIndex = storedLists.findIndex(list => list.id === id);
+    const listIndex = storedLists.findIndex(list => list.handle === handle);
     
     if (listIndex !== -1) {
-      storedLists[listIndex].header = newHeader;
+      storedLists[listIndex].displayName = newDisplayName;
       storedLists[listIndex].lastUpdated = Date.now();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedLists));
     }
@@ -57,26 +64,26 @@ const Index = () => {
   const handleStartList = () => {
     const newListId = generateListId();
     
-    // Get the list header from app data
+    // Get the list data from app data
     const appDataStr = localStorage.getItem(APP_STORAGE_KEY);
     const appData: AppData = appDataStr ? JSON.parse(appDataStr) : { lists: {} };
-    const listHeader = appData.lists[newListId]?.header || newListId;
+    const listData = appData.lists[newListId];
     
-    updateListHistory(newListId, listHeader);
+    updateListHistory(newListId, listData?.displayName || newListId);
     
     setListId(newListId);
     setCurrentView('list');
   };
 
-  const handleJoinList = (code: string) => {
-    // Get the list header from app data
+  const handleJoinList = (handle: string) => {
+    // Get the list data from app data
     const appDataStr = localStorage.getItem(APP_STORAGE_KEY);
     const appData: AppData = appDataStr ? JSON.parse(appDataStr) : { lists: {} };
-    const listHeader = appData.lists[code]?.header || code;
+    const listData = appData.lists[handle];
     
-    updateListHistory(code, listHeader);
+    updateListHistory(handle, listData?.displayName || handle);
     
-    setListId(code);
+    setListId(handle);
     setCurrentView('list');
   };
 
@@ -90,7 +97,7 @@ const Index = () => {
       <ListPage 
         listId={listId} 
         onBack={handleBack}
-        onHeaderUpdate={(newHeader) => updateListHeaderInHistory(listId, newHeader)}
+        onHeaderUpdate={(newDisplayName) => updateListDisplayNameInHistory(listId, newDisplayName)}
         onContentUpdate={() => updateListHistory(listId, '', true)}
       />
     );

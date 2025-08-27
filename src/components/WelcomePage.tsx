@@ -13,7 +13,8 @@ const STORAGE_KEY = "homifyapt-list-history";
 
 interface ListHistoryItem {
   id: string;
-  header: string;
+  handle: string;
+  displayName: string;
   lastAccessed: number;
   lastUpdated: number;
 }
@@ -47,7 +48,8 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
           ? lists.map(item => typeof item === 'string' 
               ? { 
                   id: item, 
-                  header: item, 
+                  handle: item,
+                  displayName: item,
                   lastAccessed: Date.now(),
                   lastUpdated: Date.now()
                 } 
@@ -75,8 +77,8 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
     }
   };
 
-  const handleStoredListClick = (code: string) => {
-    onJoinList(code);
+  const handleStoredListClick = (handle: string) => {
+    onJoinList(handle);
   };
 
   const renderListButton = (list: ListHistoryItem) => (
@@ -84,10 +86,13 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
       key={list.id}
       variant="ghost"
       className="w-full justify-start text-left bg-gradient-to-r from-muted/50 via-background to-background hover:from-primary/10 hover:via-primary/5 hover:to-background transition-all duration-300"
-      onClick={() => handleStoredListClick(list.id)}
+      onClick={() => handleStoredListClick(list.handle)}
     >
       <div className="flex items-center justify-between w-full">
-        <span className="font-medium">{list.header}</span>
+        <div className="flex flex-col items-start">
+          <span className="font-medium">{list.displayName}</span>
+          <span className="text-xs text-muted-foreground">{list.handle}</span>
+        </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
           <Clock className="w-3 h-3" />
           <span>{getRelativeTimeString(list.lastAccessed)}</span>
