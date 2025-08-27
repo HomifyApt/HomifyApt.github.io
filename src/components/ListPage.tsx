@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListItem } from "./ListItem";
 import { AddItemDialog } from "./AddItemDialog";
 import { EditHeaderDialog } from "./EditHeaderDialog";
-import { Plus, Edit3, ArrowLeft } from "lucide-react";
+import { PriceChartDialog } from "./PriceChartDialog";
+import { Plus, Edit3, ArrowLeft, Euro } from "lucide-react";
 import { FurnitureItem, ItemStatus, AppData, List, APP_STORAGE_KEY } from "../types/furniture";
 
 interface ListPageProps {
@@ -20,6 +21,7 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
   const [items, setItems] = useState<FurnitureItem[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditHeaderOpen, setIsEditHeaderOpen] = useState(false);
+  const [isPriceChartOpen, setIsPriceChartOpen] = useState(false);
 
   // Load items from localStorage on mount
   useEffect(() => {
@@ -175,15 +177,23 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
           </div>
         </div>
 
-        {/* Add Item Button */}
-        <Button
-          onClick={() => setIsAddDialogOpen(true)}
-          className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90"
-          size="lg"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add Furniture Item
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex gap-2 justify-center">
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+            size="lg"
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+          <Button
+            onClick={() => setIsPriceChartOpen(true)}
+            className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+            size="lg"
+          >
+            <Euro className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -269,6 +279,12 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
         onOpenChange={setIsEditHeaderOpen}
         currentHeader={displayHeader}
         onUpdateHeader={handleHeaderUpdate}
+      />
+
+      <PriceChartDialog
+        open={isPriceChartOpen}
+        onOpenChange={setIsPriceChartOpen}
+        items={items}
       />
     </div>
   );

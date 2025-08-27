@@ -86,9 +86,9 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
       className="w-full justify-start text-left bg-gradient-to-r from-muted/50 via-background to-background hover:from-primary/10 hover:via-primary/5 hover:to-background transition-all duration-300"
       onClick={() => handleStoredListClick(list.id)}
     >
-      <div className="flex flex-col gap-1 w-full">
+      <div className="flex items-center justify-between w-full">
         <span className="font-medium">{list.header}</span>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
           <Clock className="w-3 h-3" />
           <span>{getRelativeTimeString(list.lastAccessed)}</span>
         </div>
