@@ -8,6 +8,8 @@ export interface FurnitureItem {
   url?: string;
   price?: number;
   status: ItemStatus;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface List {
@@ -15,6 +17,8 @@ export interface List {
   handle: string; // Previously header, used for joining lists
   displayName: string; // Display friendly name
   items: FurnitureItem[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AppData {
