@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Plus, Users, History } from "lucide-react";
+import { Home, Plus, Users, History, Clock } from "lucide-react";
 
 interface WelcomePageProps {
   onStartList: () => void;
@@ -11,30 +11,66 @@ interface WelcomePageProps {
 
 const STORAGE_KEY = "homifyapt-list-history";
 
+interface ListHistoryItem {
+  id: string;
+  header: string;
+  lastAccessed: number;
+  lastUpdated: number;
+}
+
+function getRelativeTimeString(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (minutes > 0) return `${minutes}m ago`;
+  return 'just now';
+}
+
 export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
   const [joinCode, setJoinCode] = useState("");
   const [isJoining, setIsJoining] = useState(false);
-  const [storedLists, setStoredLists] = useState<string[]>([]);
+  const [storedLists, setStoredLists] = useState<ListHistoryItem[]>([]);
+  const [, setUpdateTrigger] = useState(0); // For forcing updates of relative times
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
         const lists = JSON.parse(stored);
-        setStoredLists(Array.isArray(lists) ? lists : []);
+        // Handle both old format (string[]) and new format (ListHistoryItem[])
+        setStoredLists(Array.isArray(lists) 
+          ? lists.map(item => typeof item === 'string' 
+              ? { 
+                  id: item, 
+                  header: item, 
+                  lastAccessed: Date.now(),
+                  lastUpdated: Date.now()
+                } 
+              : item)
+          : []);
       } catch {
         setStoredLists([]);
       }
     }
   }, []);
 
+  // Update relative times every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUpdateTrigger(prev => prev + 1);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (joinCode.trim()) {
       const code = joinCode.trim().toLowerCase();
-      // Store the code in localStorage
-      const updatedLists = [code, ...storedLists.filter(list => list !== code)].slice(0, 5);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedLists));
       onJoinList(code);
     }
   };
@@ -42,6 +78,23 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
   const handleStoredListClick = (code: string) => {
     onJoinList(code);
   };
+
+  const renderListButton = (list: ListHistoryItem) => (
+    <Button
+      key={list.id}
+      variant="ghost"
+      className="w-full justify-start text-left bg-gradient-to-r from-muted/50 via-background to-background hover:from-primary/10 hover:via-primary/5 hover:to-background transition-all duration-300"
+      onClick={() => handleStoredListClick(list.id)}
+    >
+      <div className="flex flex-col gap-1 w-full">
+        <span className="font-medium">{list.header}</span>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Clock className="w-3 h-3" />
+          <span>{getRelativeTimeString(list.lastAccessed)}</span>
+        </div>
+      </div>
+    </Button>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 flex items-center justify-center p-4">
@@ -107,16 +160,7 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
                   <CardDescription>Quick access to your recent lists</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {storedLists.map((list) => (
-                    <Button
-                      key={list}
-                      variant="ghost"
-                      className="w-full justify-start text-left font-mono"
-                      onClick={() => handleStoredListClick(list)}
-                    >
-                      {list}
-                    </Button>
-                  ))}
+                  {storedLists.map(renderListButton)}
                 </CardContent>
               </Card>
             )}
@@ -166,16 +210,7 @@ export function WelcomePage({ onStartList, onJoinList }: WelcomePageProps) {
                     <span>Recent Lists</span>
                   </div>
                   <div className="space-y-2">
-                    {storedLists.map((list) => (
-                      <Button
-                        key={list}
-                        variant="ghost"
-                        className="w-full justify-start text-left font-mono"
-                        onClick={() => handleStoredListClick(list)}
-                      >
-                        {list}
-                      </Button>
-                    ))}
+                    {storedLists.map(renderListButton)}
                   </div>
                 </div>
               )}

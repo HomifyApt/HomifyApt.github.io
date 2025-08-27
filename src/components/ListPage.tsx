@@ -11,9 +11,11 @@ import { FurnitureItem, ItemStatus, AppData, List, APP_STORAGE_KEY } from "../ty
 interface ListPageProps {
   listId: string;
   onBack: () => void;
+  onHeaderUpdate: (newHeader: string) => void;
+  onContentUpdate: () => void;
 }
 
-export function ListPage({ listId, onBack }: ListPageProps) {
+export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: ListPageProps) {
   const [displayHeader, setDisplayHeader] = useState(listId);
   const [items, setItems] = useState<FurnitureItem[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -105,6 +107,44 @@ export function ListPage({ listId, onBack }: ListPageProps) {
   const pendingItems = items.filter(item => item.status === 'pending');
   const orderedItems = items.filter(item => item.status === 'ordered');
   const receivedItems = items.filter(item => item.status === 'received');
+
+  // Update the saveItems function to trigger onContentUpdate
+  const saveItems = (newItems: FurnitureItem[]) => {
+    try {
+      const savedData = localStorage.getItem(APP_STORAGE_KEY);
+      let appData: AppData = savedData ? JSON.parse(savedData) : { lists: {} };
+      
+      appData.lists[listId] = {
+        ...appData.lists[listId],
+        items: newItems
+      };
+      
+      localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(appData));
+      setItems(newItems);
+      onContentUpdate();
+    } catch (error) {
+      console.error('Error saving items:', error);
+    }
+  };
+
+  // Update the handleHeaderUpdate function to trigger onHeaderUpdate
+  const handleHeaderUpdate = (newHeader: string) => {
+    try {
+      const savedData = localStorage.getItem(APP_STORAGE_KEY);
+      let appData: AppData = savedData ? JSON.parse(savedData) : { lists: {} };
+      
+      appData.lists[listId] = {
+        ...appData.lists[listId],
+        header: newHeader
+      };
+      
+      localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(appData));
+      setDisplayHeader(newHeader);
+      onHeaderUpdate(newHeader);
+    } catch (error) {
+      console.error('Error updating header:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -228,7 +268,7 @@ export function ListPage({ listId, onBack }: ListPageProps) {
         open={isEditHeaderOpen}
         onOpenChange={setIsEditHeaderOpen}
         currentHeader={displayHeader}
-        onUpdateHeader={setDisplayHeader}
+        onUpdateHeader={handleHeaderUpdate}
       />
     </div>
   );
