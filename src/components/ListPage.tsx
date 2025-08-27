@@ -106,9 +106,11 @@ export function ListPage({ listId, onBack, onHeaderUpdate, onContentUpdate }: Li
     setItems(prev => prev.filter(item => item.id !== itemId));
   };
 
-  const pendingItems = items.filter(item => item.status === 'pending');
-  const orderedItems = items.filter(item => item.status === 'ordered');
-  const receivedItems = items.filter(item => item.status === 'received');
+  // Filter out deleted items first, then categorize the remaining items
+  const activeItems = items.filter(item => item.status !== 'deleted');
+  const pendingItems = activeItems.filter(item => item.status === 'pending');
+  const orderedItems = activeItems.filter(item => item.status === 'ordered');
+  const receivedItems = activeItems.filter(item => item.status === 'received');
 
   // Update the saveItems function to trigger onContentUpdate
   const saveItems = (newItems: FurnitureItem[]) => {

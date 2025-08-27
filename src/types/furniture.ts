@@ -1,4 +1,4 @@
-export type ItemStatus = 'pending' | 'ordered' | 'received';
+export type ItemStatus = 'pending' | 'ordered' | 'received' | 'deleted';
 
 export interface FurnitureItem {
   id: string;

@@ -18,7 +18,7 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [swipeAction, setSwipeAction] = useState<'none' | 'right' | 'left'>('none');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<'delete' | 'status' | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'delete' | 'status' | 'revert' | null>(null);
   
   const cardRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
@@ -91,15 +91,21 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
     cardRef.current.style.backgroundColor = '';
     
     if (Math.abs(deltaX) > 50) {
-      if (deltaX > 0) {
-        // Right swipe - change status
+      if (deltaX > 0 && item.status !== 'received') {
+        // Right swipe - change status to next state
+        // pending -> ordered
+        // ordered -> received
+        // received -> disabled
         setSwipeAction('right');
         setConfirmAction('status');
         setShowConfirmDialog(true);
-      } else {
-        // Left swipe - delete
+      } else if (deltaX < 0) {
+        // Left swipe
+        // pending -> deleted
+        // ordered -> pending
+        // received -> ordered
         setSwipeAction('left');
-        setConfirmAction('delete');
+        setConfirmAction('status');
         setShowConfirmDialog(true);
       }
     }
@@ -159,13 +165,23 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
   }, []);
 
   const handleConfirmAction = () => {
-    if (confirmAction === 'delete') {
-      onDelete();
-    } else if (confirmAction === 'status') {
-      if (isPending) {
-        onUpdate({ status: 'ordered' });
-      } else if (item.status === 'ordered') {
-        onUpdate({ status: 'received' });
+    if (confirmAction === 'status') {
+      if (swipeAction === 'right') {
+        // Right swipe transitions
+        if (item.status === 'pending') {
+          onUpdate({ status: 'ordered' });
+        } else if (item.status === 'ordered') {
+          onUpdate({ status: 'received' });
+        }
+      } else if (swipeAction === 'left') {
+        // Left swipe transitions
+        if (item.status === 'pending') {
+          onUpdate({ status: 'deleted' });
+        } else if (item.status === 'ordered') {
+          onUpdate({ status: 'pending' });
+        } else if (item.status === 'received') {
+          onUpdate({ status: 'ordered' });
+        }
       }
     }
     setShowConfirmDialog(false);
@@ -174,9 +190,15 @@ export function ListItem({ item, onUpdate, onDelete, isPending }: ListItemProps)
   };
 
   const getActionText = () => {
-    if (confirmAction === 'delete') return 'delete this item';
-    if (isPending) return 'mark this item as ordered';
-    return 'mark this item as received';
+    if (swipeAction === 'right') {
+      if (item.status === 'pending') return 'mark this item as ordered';
+      if (item.status === 'ordered') return 'mark this item as received';
+    } else if (swipeAction === 'left') {
+      if (item.status === 'pending') return 'delete this item';
+      if (item.status === 'ordered') return 'change this item back to pending';
+      if (item.status === 'received') return 'change this item back to ordered';
+    }
+    return 'update this item';
   };
 
   return (

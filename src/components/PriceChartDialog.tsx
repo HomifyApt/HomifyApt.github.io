@@ -21,10 +21,14 @@ interface PriceChartDialogProps {
 
 export function PriceChartDialog({ open, onOpenChange, items }: PriceChartDialogProps) {
   const chartData = React.useMemo(() => {
-    const validPriceItems = items.filter(item => item.price !== undefined);
+    const validPriceItems = items.filter(item => 
+      item.price !== undefined && 
+      item.status !== 'deleted'
+    );
     return validPriceItems.map(item => ({
       name: item.title,
       value: item.price || 0,
+      status: item.status,
     }));
   }, [items]);
 
@@ -32,18 +36,11 @@ export function PriceChartDialog({ open, onOpenChange, items }: PriceChartDialog
     return chartData.reduce((sum, item) => sum + item.value, 0);
   }, [chartData]);
 
-  const COLORS = [
-    "#FF6B6B",
-    "#4ECDC4",
-    "#45B7D1",
-    "#96CEB4",
-    "#FFEEAD",
-    "#D4A5A5",
-    "#9FA8DA",
-    "#FFE082",
-    "#A5D6A7",
-    "#EF9A9A",
-  ];
+  const STATUS_COLORS = {
+    pending: "#6366F1",  // Indigo - vibrant but not too harsh
+    ordered: "#22C55E",  // Green - distinct from both pending and received
+    received: "#EC4899", // Pink - strong contrast with other colors
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -67,15 +64,29 @@ export function PriceChartDialog({ open, onOpenChange, items }: PriceChartDialog
                   outerRadius={100}
                   fill="#8884d8"
                   label={(entry) => `€${entry.value}`}
+                  strokeWidth={1}
+                  stroke="#fff" // White border to help separate segments
                 >
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={STATUS_COLORS[entry.status]}
                     />
                   ))}
                 </Pie>
-                <ChartTooltip />
+                <ChartTooltip content={({ payload }) => {
+                  if (payload && payload.length > 0) {
+                    const data = payload[0].payload;
+                    return (
+                      <div className="bg-white p-2 shadow rounded">
+                        <p className="font-medium">{data.name}</p>
+                        <p>€{data.value}</p>
+                        <p className="capitalize">{data.status}</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }} />
                 <ChartLegend />
               </PieChart>
             </ChartContainer>
